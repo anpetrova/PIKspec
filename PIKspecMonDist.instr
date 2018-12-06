@@ -1,0 +1,165 @@
+/*******************************************************************************
+* Instrument: PIKspec
+*
+* Written by: Anita Petrova (ani_petrova@mail.ru)
+* Date: 03.12.18
+* Origin: SPbSU
+*
+* Spectrometer for measurements of spectrum at PIK during its start on 8th of February
+*<parameters=values>
+*
+* %P
+* <parameter1>: [<unit>] <parameter1 description>
+*******************************************************************************/
+DEFINE INSTRUMENT PIKspec(focus_L=2, nu=32, n_pulse=2, abs_out=1, mon_y=0.1, mon_x=0.012)
+
+DECLARE
+%{
+double focus_x, focus_y;
+double Lcd_y, Lcd_x, ydiv, xdiv;
+double R_ch, W_g, chop_y;
+double Lcd_min;
+%}
+
+INITIALIZE
+%{
+/*Divergence*/
+focus_x=0.12;
+focus_y=0.2;
+ydiv=atan(focus_y/2/focus_L);
+xdiv=atan(focus_x/2/focus_L);
+
+R_ch=0.27; //Disc chopper radius
+chop_y=0.04;
+W_g=0.06; //Half-width of a neutron guide 
+Lcd_y = (mon_y/2+chop_y/2)/tan(ydiv); //Maximum dist to catch all the divergence from y-plane
+Lcd_x = (mon_x/2+W_g)/tan(ydiv); //Maximum dist to catch all the divergence from x-plane
+
+//Lcd_min = fmin(Lcd_y, Lcd_x);
+Lcd_min=4.5;
+
+printf("ydiv = %f, xdiv = %f, Lcd_y = %f, Lcd_x = %f , Lcd_min = %f \n", ydiv*RAD2DEG, xdiv*RAD2DEG, Lcd_y, Lcd_x, Lcd_min);
+
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+COMPONENT Pik = Source_gen(
+    dist=focus_L, 
+    focus_xw=0.003, 
+    focus_yh=0.04, 
+    Lmin=0.5, Lmax=50,
+    xwidth=0.12, 
+    yheight=0.2, 
+    T1=300, I1=1.75e9/*,
+     T1=310, I1=1.75e12,
+    T2=150, I2=6.65e12, 
+    T3=26,   I3=1.05e13*/)
+AT (0, 0, 0) RELATIVE origin
+
+//////////////////////SOURCE MONITORS///////////////////////////////
+COMPONENT MonLSource = Monitor_nD(
+    xwidth=0.13, 
+    yheight=0.21, 
+    restore_neutron=1, 
+    options="wavelength, bins=200, limits=[0.5 50]")
+AT (0, 0, focus_L+1e-4) RELATIVE PREVIOUS
+
+COMPONENT MonXYSource = Monitor_nD(
+    xwidth=0.13, 
+    yheight=0.21, 
+    restore_neutron=1, 
+    options="x, bins=100, limits=[-0.07 0.07], y, bins=100, limits=[-0.11 0.11]")
+AT (0, 0, 1e-4) RELATIVE PREVIOUS
+
+COMPONENT MonXYdivSource = Monitor_nD(
+    xwidth=0.13, 
+    yheight=0.21, 
+    restore_neutron=1, 
+    options="dx, bins=100, limits=[-7 7], dy, bins=100, limits=[-7 7]")
+AT (0, 0, 1e-4) RELATIVE PREVIOUS
+
+
+COMPONENT ChopperSlit = Slit(
+    xwidth=0.003, 
+    yheight=chop_y)
+AT (0, 0, focus_L+4e-4) RELATIVE Pik
+
+COMPONENT Mon_entry = Monitor_nD(
+    xwidth=0.003, 
+    yheight=0.04, 
+    restore_neutron=1, 
+    options="x, bins=100 limits=[-0.0015 0.0015]")
+AT (0, 0, 5e-5) RELATIVE PREVIOUS
+
+////////////////////////////////////////////////////
+
+COMPONENT Chopper = DiskChopper(
+    //theta_0=20,
+    xwidth=0.003,
+    radius=R_ch, 
+    yheight=chop_y, 
+    nu=nu, 
+    nslit=1, 
+    isfirst=1, 
+    n_pulse=n_pulse, 
+    abs_out=abs_out,  
+    verbose=1)
+AT (0, 0, focus_L+5e-4) RELATIVE Pik
+
+COMPONENT Time = Monitor_nD(
+    xwidth=mon_x, 
+    yheight=mon_y, 
+    restore_neutron=1, 
+    options="time, bins=10000 limits=[0.031 0.032]")
+AT (0, 0, 1e-4) RELATIVE PREVIOUS
+
+///////////////////////////////////////////////////////
+COMPONENT Lambda1 = Monitor_nD(
+    xwidth=mon_x, 
+    yheight=mon_y, 
+    restore_neutron=1, 
+    options="wavelength, bins=20000, limits=[0.5 30]")
+AT (0, 0, Lcd_min) RELATIVE Chopper
+
+COMPONENT Time1 = Monitor_nD(
+    xwidth=mon_x, 
+    yheight=mon_y, 
+    restore_neutron=1, 
+    options="time, bins=3125 limits=[0.031 0.0613]")
+AT (0, 0, 1e-4) RELATIVE PREVIOUS
+
+COMPONENT XY1 = Monitor_nD(
+    xwidth=mon_x, 
+    yheight=mon_y, 
+    restore_neutron=1, 
+    options="x, bins=100, limits=[-0.07 0.07], y, bins=100, limits=[-0.11 0.11]")
+AT (0, 0, 1e-4) RELATIVE PREVIOUS
+
+COMPONENT XYdiv1 = Monitor_nD(
+    xwidth=mon_x, 
+    yheight=mon_y, 
+    restore_neutron=1, 
+    options="dx, bins=100, limits=[-4 4], dy, bins=100, limits=[-4 4]")
+AT (0, 0, 1e-4) RELATIVE PREVIOUS
+
+///////////////////////////////////////////////
+
+/*COMPONENT TimeLcdMin = COPY(Time1)
+AT (0, 0, Lcd_min) RELATIVE Chopper
+
+COMPONENT Time3 = COPY(Time1)
+AT (0, 0, 1.5*Lcd_min) RELATIVE Chopper
+
+COMPONENT Time4 = COPY(Time1)
+AT (0, 0, 2*Lcd_min) RELATIVE Chopper*/
+
+FINALLY
+%{
+%}
+
+END
+
