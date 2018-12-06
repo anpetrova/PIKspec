@@ -11,10 +11,11 @@
 * %P
 * <parameter1>: [<unit>] <parameter1 description>
 *******************************************************************************/
-DEFINE INSTRUMENT PIKspec(focus_L=2, nu=32, n_pulse=2, abs_out=1, mon_y=0.1, mon_x=0.012)
+DEFINE INSTRUMENT PIKspec(wslit=0.006, nu=64, n_pulse=2, abs_out=1, mon_y=0.1, mon_x=0.012)
 
 DECLARE
 %{
+double focus_L;
 double focus_x, focus_y;
 double Lcd_y, Lcd_x, ydiv, xdiv;
 double R_ch, W_g, chop_y;
@@ -24,6 +25,7 @@ double Lcd_min;
 INITIALIZE
 %{
 /*Divergence*/
+focus_L=2;
 focus_x=0.12;
 focus_y=0.2;
 ydiv=atan(focus_y/2/focus_L);
@@ -49,15 +51,12 @@ AT (0, 0, 0) RELATIVE ABSOLUTE
 
 COMPONENT Pik = Source_gen(
     dist=focus_L, 
-    focus_xw=0.003, 
+    focus_xw=0.05, 
     focus_yh=0.04, 
     Lmin=0.5, Lmax=50,
     xwidth=0.12, 
     yheight=0.2, 
-    T1=300, I1=1.75e9/*,
-     T1=310, I1=1.75e12,
-    T2=150, I2=6.65e12, 
-    T3=26,   I3=1.05e13*/)
+    T1=306.4, I1=7.05e9)
 AT (0, 0, 0) RELATIVE origin
 
 //////////////////////SOURCE MONITORS///////////////////////////////
@@ -65,7 +64,7 @@ COMPONENT MonLSource = Monitor_nD(
     xwidth=0.13, 
     yheight=0.21, 
     restore_neutron=1, 
-    options="wavelength, bins=200, limits=[0.5 50]")
+    options="wavelength, bins=200, limits=[0.5 20]")
 AT (0, 0, focus_L+1e-4) RELATIVE PREVIOUS
 
 COMPONENT MonXYSource = Monitor_nD(
@@ -84,7 +83,7 @@ AT (0, 0, 1e-4) RELATIVE PREVIOUS
 
 
 COMPONENT ChopperSlit = Slit(
-    xwidth=0.003, 
+    xwidth=wslit, 
     yheight=chop_y)
 AT (0, 0, focus_L+4e-4) RELATIVE Pik
 
@@ -110,36 +109,36 @@ COMPONENT Chopper = DiskChopper(
     verbose=1)
 AT (0, 0, focus_L+5e-4) RELATIVE Pik
 
-COMPONENT Time = Monitor_nD(
+COMPONENT ChopperPulse = Monitor_nD(
     xwidth=mon_x, 
     yheight=mon_y, 
     restore_neutron=1, 
-    options="time, bins=10000 limits=[0.031 0.032]")
+    options="time, bins=200 limits=[0.0155 0.0158]")
 AT (0, 0, 1e-4) RELATIVE PREVIOUS
 
 ///////////////////////////////////////////////////////
-COMPONENT Lambda1 = Monitor_nD(
+COMPONENT SpectrumL45m = Monitor_nD(
     xwidth=mon_x, 
     yheight=mon_y, 
     restore_neutron=1, 
-    options="wavelength, bins=20000, limits=[0.5 30]")
+    options="wavelength, bins=200, limits=[0.5 20]")
 AT (0, 0, Lcd_min) RELATIVE Chopper
 
-COMPONENT Time1 = Monitor_nD(
+COMPONENT DetectorT45m = Monitor_nD(
     xwidth=mon_x, 
     yheight=mon_y, 
     restore_neutron=1, 
-    options="time, bins=3125 limits=[0.031 0.0613]")
+    options="time, bins=1024 limits=[0 0.03125]")
 AT (0, 0, 1e-4) RELATIVE PREVIOUS
 
-COMPONENT XY1 = Monitor_nD(
+COMPONENT MonXY45 = Monitor_nD(
     xwidth=mon_x, 
     yheight=mon_y, 
     restore_neutron=1, 
     options="x, bins=100, limits=[-0.07 0.07], y, bins=100, limits=[-0.11 0.11]")
 AT (0, 0, 1e-4) RELATIVE PREVIOUS
 
-COMPONENT XYdiv1 = Monitor_nD(
+COMPONENT MonXYdiv45 = Monitor_nD(
     xwidth=mon_x, 
     yheight=mon_y, 
     restore_neutron=1, 
@@ -148,14 +147,7 @@ AT (0, 0, 1e-4) RELATIVE PREVIOUS
 
 ///////////////////////////////////////////////
 
-/*COMPONENT TimeLcdMin = COPY(Time1)
-AT (0, 0, Lcd_min) RELATIVE Chopper
 
-COMPONENT Time3 = COPY(Time1)
-AT (0, 0, 1.5*Lcd_min) RELATIVE Chopper
-
-COMPONENT Time4 = COPY(Time1)
-AT (0, 0, 2*Lcd_min) RELATIVE Chopper*/
 
 FINALLY
 %{
