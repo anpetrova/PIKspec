@@ -2,7 +2,7 @@
 * Instrument: PIKspec
 *
 * Written by: Anita Petrova (ani_petrova@mail.ru)
-* Date: 03.12.18
+* Date: 12.12.18
 * Origin: SPbSU
 *
 * Spectrometer for measurements of spectrum at PIK during its start on 8th of February
@@ -11,7 +11,7 @@
 * %P
 * <parameter1>: [<unit>] <parameter1 description>
 *******************************************************************************/
-DEFINE INSTRUMENT PIKspec(wslit=0.006, nu=64, n_pulse=2, abs_out=1, mon_y=0.1, mon_x=0.012)
+DEFINE INSTRUMENT PIKspec(wslit=0.006, nu=64, n_pulse=1, abs_out=1, mon_y=0.1, mon_x=0.012)
 
 DECLARE
 %{
@@ -52,7 +52,7 @@ AT (0, 0, 0) RELATIVE ABSOLUTE
 COMPONENT Pik = Source_gen(
     dist=focus_L, 
     focus_xw=0.05, 
-    focus_yh=0.04, 
+    focus_yh=0.05, 
     Lmin=0.5, Lmax=50,
     xwidth=0.12, 
     yheight=0.2, 
@@ -113,7 +113,7 @@ COMPONENT ChopperPulse = Monitor_nD(
     xwidth=mon_x, 
     yheight=mon_y, 
     restore_neutron=1, 
-    options="time, bins=200 limits=[0.0155 0.0158]")
+    options="time, bins=200 limits=[0 0.001]")
 AT (0, 0, 1e-4) RELATIVE PREVIOUS
 
 ///////////////////////////////////////////////////////
@@ -128,7 +128,7 @@ COMPONENT DetectorT45m = Monitor_nD(
     xwidth=mon_x, 
     yheight=mon_y, 
     restore_neutron=1, 
-    options="time, bins=1024 limits=[0 0.03125]")
+    options="time, bins=512 limits=[0 0.015625]")
 AT (0, 0, 1e-4) RELATIVE PREVIOUS
 
 COMPONENT MonXY45 = Monitor_nD(

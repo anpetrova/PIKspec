@@ -11,7 +11,7 @@
 * %P
 * <parameter1>: [<unit>] <parameter1 description>
 *******************************************************************************/
-DEFINE INSTRUMENT PIKspec(wslit=0.0076, nu=40, n_pulse=4, abs_out=1, mon_y=0.1, mon_x=0.012)
+DEFINE INSTRUMENT PIKspec(wslit=0.0036, nu=39.0625, n_pulse=1, abs_out=1, mon_y=0.1, mon_x=0.012)
 
 DECLARE
 %{
@@ -52,7 +52,7 @@ AT (0, 0, 0) RELATIVE ABSOLUTE
 COMPONENT Pik = Source_gen(
     dist=focus_L, 
     focus_xw=0.05, 
-    focus_yh=0.04, 
+    focus_yh=0.05, 
     Lmin=0.5, Lmax=50,
     xwidth=0.12, 
     yheight=0.2, 
@@ -88,7 +88,7 @@ COMPONENT ChopperSlit = Slit(
 AT (0, 0, focus_L+4e-4) RELATIVE Pik
 
 COMPONENT Mon_entry = Monitor_nD(
-    xwidth=0.003, 
+    xwidth=0.007, 
     yheight=0.04, 
     restore_neutron=1, 
     options="x, bins=100 limits=[-0.0015 0.0015]")
@@ -98,7 +98,7 @@ AT (0, 0, 5e-5) RELATIVE PREVIOUS
 
 COMPONENT Chopper = DiskChopper(
     //theta_0=20,
-    xwidth=0.0076,
+    xwidth=0.0036,
     radius=R_ch, 
     yheight=chop_y, 
     nu=nu, 
@@ -113,7 +113,7 @@ COMPONENT ChopperPulse = Monitor_nD(
     xwidth=mon_x, 
     yheight=mon_y, 
     restore_neutron=1, 
-    options="time, bins=500 limits=[0.0122 0.0128]")
+    options="time, bins=500 limits=[0 0.001]")
 AT (0, 0, 1e-4) RELATIVE PREVIOUS
 
 ///////////////////////////////////////////////////////
@@ -128,7 +128,7 @@ COMPONENT DetectorT45m = Monitor_nD(
     xwidth=mon_x, 
     yheight=mon_y, 
     restore_neutron=1, 
-    options="time, bins=5000 limits=[0 0.05]")
+    options="time, bins=256 limits=[0 0.012800]")
 AT (0, 0, 1e-4) RELATIVE PREVIOUS
 
 COMPONENT MonXY45 = Monitor_nD(
